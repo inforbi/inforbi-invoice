@@ -1,0 +1,13 @@
+sudo: required
+language: go
+services:
+- docker
+
+before_install:
+- docker pull therecipe/qt:windows_64_static
+- docker pull therecipe/qt:linux
+
+script:
+- go get -v github.com/therecipe/qt/cmd/...
+- $GOPATH/bin/qtdeploy -docker build windows_64_static
+- $GOPATH/bin/qtdeploy -docker build linux
