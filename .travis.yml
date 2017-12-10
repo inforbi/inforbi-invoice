@@ -8,6 +8,6 @@ before_install:
 - docker pull therecipe/qt:linux
 
 script:
-- go get -v github.com/therecipe/qt/cmd/...
+- go get -u -v github.com/therecipe/qt/cmd/...
 - $GOPATH/bin/qtdeploy -docker build windows_64_static
 - $GOPATH/bin/qtdeploy -docker build linux
