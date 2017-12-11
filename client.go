@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"errors"
+	"io/ioutil"
 )
 
 type Client struct {

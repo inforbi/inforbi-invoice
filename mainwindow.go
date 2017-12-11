@@ -26,10 +26,10 @@ type MainWindow struct {
 }
 
 var (
-	clientSelected      = false
-	invoiceSelected     = false
-	selectedClient      Client
-	selectedInvoice     Invoice
+	clientSelected  = false
+	invoiceSelected = false
+	selectedClient  Client
+	selectedInvoice Invoice
 )
 
 func initMainWindow() *MainWindow {
@@ -69,6 +69,7 @@ func initMainWindow() *MainWindow {
 	upperGrid.AddWidget(this.invoiceCreate, 1, 3, core.Qt__AlignLeft)
 
 	this.invoiceChoose.ConnectPressed(this.chooseInvoice)
+	this.invoiceEdit.ConnectPressed(this.editInvoice)
 
 	this.previewBtn = widgets.NewQPushButton2("Preview", nil)
 	this.saveTexBtn = widgets.NewQPushButton2("Save .tex", nil)
@@ -77,66 +78,72 @@ func initMainWindow() *MainWindow {
 	lowerGrid.AddWidget(this.saveTexBtn, 0, 1, core.Qt__AlignCenter)
 	lowerGrid.AddWidget(this.savePdfBtn, 0, 2, core.Qt__AlignCenter)
 
-	this.updateInvoice()
+	//this.updateInvoice()
 	this.updateClient()
 
 	return this
 }
 
-func (mainWindow *MainWindow) chooseClient() {
+func (window *MainWindow) chooseClient() {
 	wd, err := os.Getwd()
 	if err != nil {
-		widgets.NewQErrorMessage(mainWindow).ShowMessage("Can't get directory!")
+		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
-	dialog := widgets.NewQFileDialog(mainWindow, 0)
-	path := dialog.GetOpenFileName(mainWindow, "Choose client", wd,
+	dialog := widgets.NewQFileDialog(window, 0)
+	path := dialog.GetOpenFileName(window, "Choose client", wd,
 		"*.json", "", 0)
 	if len(path) > 0 {
 		client, err := DecodeClient(path)
 		if err != nil {
-			widgets.NewQErrorMessage(mainWindow).ShowMessage("Your selected file doesn't seem to be valid!")
+			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
 		} else {
 			selectedClient = client
 			clientSelected = true
-			mainWindow.updateClient()
-			mainWindow.updateInvoice()
+			window.updateClient()
+			window.updateInvoice()
 		}
 	}
 }
 
-func (mainWindow *MainWindow) chooseInvoice() {
+func (window *MainWindow) editInvoice() {
+	editItems := initItemsWindow(selectedInvoice.Items, window.ParentWidget())
+	editItems.SetWindowModality(core.Qt__ApplicationModal)
+	editItems.Show()
+}
+
+func (window *MainWindow) chooseInvoice() {
 	wd, err := os.Getwd()
 	if err != nil {
-		widgets.NewQErrorMessage(mainWindow).ShowMessage("Can't get directory!")
+		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
-	dialog := widgets.NewQFileDialog(mainWindow, 0)
-	path := dialog.GetOpenFileName(mainWindow, "Choose invoice", wd,
+	dialog := widgets.NewQFileDialog(window, 0)
+	path := dialog.GetOpenFileName(window, "Choose invoice", wd,
 		"*.json", "", 0)
 	if len(path) > 0 {
 		invoice, err := DecodeInvoice(path)
 		if err != nil {
-			widgets.NewQErrorMessage(mainWindow).ShowMessage("Your selected file doesn't seem to be valid!")
+			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
 		} else {
 			selectedInvoice = invoice
 			invoiceSelected = true
-			mainWindow.updateInvoice()
+			window.updateInvoice()
 		}
 	}
 }
 
-func (mainWindow *MainWindow) updateInvoice() {
+func (window *MainWindow) updateInvoice() {
 	if clientSelected && invoiceSelected {
-		mainWindow.invoiceName.SetText("<" + strconv.Itoa(selectedInvoice.Number) + "> " + selectedInvoice.Project)
+		window.invoiceName.SetText("<" + strconv.Itoa(selectedInvoice.Number) + "> " + selectedInvoice.Project)
 	}
-	mainWindow.invoiceEdit.SetEnabled(clientSelected && invoiceSelected)
-	mainWindow.invoiceChoose.SetEnabled(clientSelected)
-	mainWindow.invoiceCreate.SetEnabled(invoiceSelected)
+	window.invoiceEdit.SetEnabled(clientSelected && invoiceSelected)
+	window.invoiceChoose.SetEnabled(clientSelected)
+	window.invoiceCreate.SetEnabled(invoiceSelected)
 }
 
-func (mainWindow *MainWindow) updateClient() {
+func (window *MainWindow) updateClient() {
 	if clientSelected {
-		mainWindow.clientName.SetText(selectedClient.Name)
+		window.clientName.SetText(selectedClient.Name)
 	}
-	mainWindow.clientEdit.SetEnabled(clientSelected)
+	window.clientEdit.SetEnabled(clientSelected)
 
 }

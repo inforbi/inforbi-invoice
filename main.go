@@ -10,7 +10,7 @@ import (
 func main() {
 	// Create application
 	app := widgets.NewQApplication(len(os.Args), os.Args)
-	client := Client{Name: "Test", City: "Munich", Contact: "Frau Muster", Street: "Street", file:"testClient.json"}
+	client := Client{Name: "Test", City: "Munich", Contact: "Frau Muster", Street: "Street", file: "testClient.json"}
 	err := client.EncodeClient()
 	if err != nil {
 		fmt.Println(err)
@@ -21,7 +21,7 @@ func main() {
 		SinglePrice: 8.8,
 		Quantifier:  "Hour",
 		Quantity:    1,
-	}}, file:"testInvoice.json"}
+	}}, file: "testInvoice.json"}
 	fmt.Println(invoice)
 	err = invoice.EncodeInvoice("testInvoice.json")
 	if err != nil {

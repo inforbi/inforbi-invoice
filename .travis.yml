@@ -1,12 +1,15 @@
 sudo: required
 language: go
+go:
+-1.9.2
 services:
 - docker
 
-before_install:
+install:
 - docker pull therecipe/qt:windows_64_static
 - docker pull therecipe/qt:linux
 - go get -u -v github.com/therecipe/qt/cmd/...
+- go get -u -v github.com/nylser/inforbi-invoice
 
 script:
 - $GOPATH/bin/qtdeploy -docker build windows_64_static

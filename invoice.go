@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"errors"
+	"io/ioutil"
 )
 
 type Invoice struct {
@@ -17,8 +17,8 @@ type Invoice struct {
 type Item struct {
 	Description string  `json:"description"`
 	Quantifier  string  `json:"quantifier"`
-	SinglePrice float32 `json:"singlePrice"`
-	Quantity    int     `json:"quantity"`
+	SinglePrice float64 `json:"singlePrice"`
+	Quantity    float64 `json:"quantity"`
 	Date        string  `json:"date"`
 }
 
