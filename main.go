@@ -28,6 +28,9 @@ func main() {
 		fmt.Println(err)
 	}
 
+	iw := initInvoiceEditWindow(invoice, nil)
+	iw.Show()
+
 	core.QCoreApplication_SetApplicationName("Invoice Creator")
 
 	mw := initMainWindow()

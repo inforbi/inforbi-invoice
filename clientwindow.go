@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/therecipe/qt/widgets"
 	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/widgets"
 )
 
 type ClientEdit struct {
 	widgets.QMainWindow
 
-	nameField *widgets.QLineEdit
+	nameField    *widgets.QLineEdit
 	contactField *widgets.QLineEdit
-	streetField *widgets.QLineEdit
-	cityField *widgets.QLineEdit
+	streetField  *widgets.QLineEdit
+	cityField    *widgets.QLineEdit
 
 	client Client
 }
