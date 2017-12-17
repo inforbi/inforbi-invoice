@@ -23,13 +23,10 @@ func main() {
 		Quantity:    1,
 	}}, file: "testInvoice.json"}
 	fmt.Println(invoice)
-	err = invoice.EncodeInvoice("testInvoice.json")
+	err = invoice.EncodeInvoice()
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	iw := initInvoiceEditWindow(invoice, nil)
-	iw.Show()
 
 	core.QCoreApplication_SetApplicationName("Invoice Creator")
 

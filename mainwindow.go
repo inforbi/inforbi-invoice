@@ -106,9 +106,11 @@ func (window *MainWindow) chooseClient() {
 }
 
 func (window *MainWindow) editInvoice() {
-	editItems := initItemsWindow(selectedInvoice.Items, window.ParentWidget())
-	editItems.SetWindowModality(core.Qt__ApplicationModal)
-	editItems.Show()
+	iw := initInvoiceEditDialog(selectedInvoice, window.ParentWidget())
+	//iw.SetWindowModality(core.Qt__ApplicationModal)
+	iw.Exec()
+	selectedInvoice = iw.invoice
+	window.updateInvoice()
 }
 
 func (window *MainWindow) chooseInvoice() {

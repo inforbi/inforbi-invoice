@@ -34,10 +34,17 @@ func DecodeInvoice(file string) (Invoice, error) {
 	return invoice, err
 }
 
-func (invoice Invoice) EncodeInvoice(file string) error {
+func (invoice Invoice) EncodeInvoice() error {
 	cont, err := json.Marshal(invoice)
 	if err == nil {
 		err = ioutil.WriteFile(invoice.file, cont, 0644)
 	}
 	return err
+}
+
+func (invoice Invoice) GetTotal() (total float64) {
+	for _, element := range invoice.Items {
+		total += element.Quantity * element.SinglePrice
+	}
+	return
 }

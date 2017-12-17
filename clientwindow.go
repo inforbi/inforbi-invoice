@@ -6,7 +6,7 @@ import (
 )
 
 type ClientEdit struct {
-	widgets.QMainWindow
+	widgets.QDialog
 
 	nameField    *widgets.QLineEdit
 	contactField *widgets.QLineEdit
@@ -16,9 +16,7 @@ type ClientEdit struct {
 	client Client
 }
 
-func initClientEditWindow(client Client, parent *widgets.QWidget) *ClientEdit {
+func initClientEditDialog(client Client, parent *widgets.QWidget) *ClientEdit {
 	this := NewClientEdit(parent, core.Qt__Dialog)
-	centralWidget := widgets.NewQWidget(this, 0)
-	this.SetCentralWidget(centralWidget)
 	return this
 }
