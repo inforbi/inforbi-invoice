@@ -52,6 +52,7 @@ func initMainWindow() *MainWindow {
 	this.clientCreate = widgets.NewQPushButton2("Create", nil)
 
 	this.clientChoose.ConnectPressed(this.chooseClient)
+	this.clientEdit.ConnectPressed(this.editClient)
 
 	upperGrid.AddWidget(this.clientName, 0, 0, core.Qt__AlignLeft)
 	upperGrid.AddWidget(this.clientChoose, 0, 1, core.Qt__AlignLeft)
@@ -78,7 +79,7 @@ func initMainWindow() *MainWindow {
 	lowerGrid.AddWidget(this.saveTexBtn, 0, 1, core.Qt__AlignCenter)
 	lowerGrid.AddWidget(this.savePdfBtn, 0, 2, core.Qt__AlignCenter)
 
-	//this.updateInvoice()
+	this.updateInvoice()
 	this.updateClient()
 
 	return this
@@ -103,6 +104,13 @@ func (window *MainWindow) chooseClient() {
 			window.updateInvoice()
 		}
 	}
+}
+
+func (window *MainWindow) editClient() {
+	cw := initClientEditDialog(selectedClient, window.ParentWidget())
+	cw.Exec()
+	selectedClient = cw.client
+	window.updateClient()
 }
 
 func (window *MainWindow) editInvoice() {
