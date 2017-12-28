@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"strings"
 )
 
 type Client struct {
@@ -32,4 +33,12 @@ func (client Client) EncodeClient() error {
 		err = ioutil.WriteFile(client.file, cont, 0644)
 	}
 	return err
+}
+
+func (client Client) ReplaceTemplate(s string) string {
+	s = strings.Replace(s, "$clientContact", client.Contact, 1)
+	s = strings.Replace(s, "$clientStreet", client.Street, 1)
+	s = strings.Replace(s, "$clientCity", client.City, 1)
+	s = strings.Replace(s, "$clientName", client.Name, 1)
+	return s
 }

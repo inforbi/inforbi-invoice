@@ -63,11 +63,15 @@ func (window *ItemsDialog) itemChanged(new *widgets.QTableWidgetItem) {
 			window.table.RemoveRow(new.Row())
 		}
 	}
-
-	if new.Column() == 2 || new.Column() == 3 {
+	if new.Column() == 5 {
+	}
+	if new.Column() == 3 || new.Column() == 4 {
 		var ok bool
-		col3 := window.table.Item(new.Row(), 3).Data(0).ToDouble(ok)
-		col4 := window.table.Item(new.Row(), 4).Data(0).ToDouble(ok)
+		var col3, col4 float64
+		if window.table.Item(new.Row(), 3) != nil && window.table.Item(new.Row(), 4) != nil {
+			col3 = window.table.Item(new.Row(), 3).Data(0).ToDouble(ok)
+			col4 = window.table.Item(new.Row(), 4).Data(0).ToDouble(ok)
+		}
 		new5 := widgets.NewQTableWidgetItem(0)
 		new5.SetData(0, core.NewQVariant12(col3*col4))
 		window.table.SetItem(new.Row(), 5, new5)

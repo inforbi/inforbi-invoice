@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"io/ioutil"
 	"os"
 )
 
@@ -27,6 +28,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	cont, err := ioutil.ReadFile("invoice.pylat")
+	if err != nil {
+		fmt.Println(err)
+	}
+	template := string(cont)
+	template = client.ReplaceTemplate(template)
+	template = invoice.ReplaceTemplate(template)
+	ioutil.WriteFile("invoice.tex", []byte(template), 0644)
 
 	core.QCoreApplication_SetApplicationName("Invoice Creator")
 

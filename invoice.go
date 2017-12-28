@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"strconv"
+	"strings"
 )
 
 type Invoice struct {
@@ -47,4 +49,25 @@ func (invoice Invoice) GetTotal() (total float64) {
 		total += element.Quantity * element.SinglePrice
 	}
 	return
+}
+
+func (item Item) GenerateLatex() string {
+	latStr := "\\lineitemu{" + item.Date + "}{" +
+		strconv.FormatFloat(item.Quantity, 'f', 2, 64) + "}{" +
+		strconv.FormatFloat(item.SinglePrice, 'f', 2, 64) +
+		"}{" + item.Quantifier + "}{\\item " + item.Description + "}"
+	return latStr
+}
+
+func (invoice Invoice) ReplaceTemplate(s string) string {
+	s = strings.Replace(s, "$number", strconv.Itoa(invoice.Number), -1)
+	s = strings.Replace(s, "$balance", strconv.FormatFloat(invoice.GetTotal(), 'f', 2, 64), -1)
+	s = strings.Replace(s, "$project", invoice.Project, -1)
+	s = strings.Replace(s, "$duein", strconv.Itoa(invoice.DueDays), -1)
+	items := ""
+	for _, element := range invoice.Items {
+		items += element.GenerateLatex() + "\n"
+	}
+	s = strings.Replace(s, "$items", items, -1)
+	return s
 }

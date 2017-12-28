@@ -1,10 +1,17 @@
 package main
 
 import (
+	"github.com/skratchdot/open-golang/open"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type MainWindow struct {
@@ -75,6 +82,10 @@ func initMainWindow() *MainWindow {
 	this.previewBtn = widgets.NewQPushButton2("Preview", nil)
 	this.saveTexBtn = widgets.NewQPushButton2("Save .tex", nil)
 	this.savePdfBtn = widgets.NewQPushButton2("Save .pdf", nil)
+
+	this.previewBtn.ConnectPressed(this.preview)
+	this.savePdfBtn.ConnectPressed(this.savePDF)
+
 	lowerGrid.AddWidget(this.previewBtn, 0, 0, core.Qt__AlignCenter)
 	lowerGrid.AddWidget(this.saveTexBtn, 0, 1, core.Qt__AlignCenter)
 	lowerGrid.AddWidget(this.savePdfBtn, 0, 2, core.Qt__AlignCenter)
@@ -155,5 +166,97 @@ func (window *MainWindow) updateClient() {
 		window.clientName.SetText(selectedClient.Name)
 	}
 	window.clientEdit.SetEnabled(clientSelected)
+}
 
+func (window *MainWindow) generateLatex() string {
+	if clientSelected && invoiceSelected {
+		bytes, err := ioutil.ReadFile("invoice.pylat")
+		if err != nil {
+			panic("Test")
+		}
+		template := string(bytes)
+		template = selectedClient.ReplaceTemplate(template)
+		template = selectedInvoice.ReplaceTemplate(template)
+		return template
+	} else {
+		return ""
+	}
+}
+
+func (window *MainWindow) preview() {
+	latex := window.generateLatex()
+	dir, err := ioutil.TempDir("", "preview")
+	if err != nil {
+		log.Fatal(err)
+	}
+	tmplat := filepath.Join(dir, "preview.tex")
+	tmpcls := filepath.Join(dir, "dapper-invoice.cls")
+
+	CopyDir("Fonts", filepath.Join(dir, "Fonts"))
+	CopyFile("dapper-invoice.cls", tmpcls)
+
+	err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
+	go func() {
+		command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
+		command.Dir = dir
+		out, err := command.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		outstr := string(out)
+		if strings.Contains(strings.ToLower(outstr), "rerun") {
+			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
+			command.Dir = dir
+			command.Run()
+		}
+		open.Run(filepath.Join(dir, "preview.pdf"))
+		go func() {
+			time.Sleep(1 * time.Second)
+			os.RemoveAll(dir)
+		}()
+	}()
+	//fmt.Println(string(out))
+}
+
+func (window *MainWindow) savePDF() {
+	wd, err := os.Getwd()
+	if err != nil {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+	}
+	dialog := widgets.NewQFileDialog(window, 0)
+	path := dialog.GetSaveFileName(window, "Save invoice", wd,
+		"*.pdf", "", 0)
+	if len(path) > 0 {
+		latex := window.generateLatex()
+		dir, err := ioutil.TempDir("", "save")
+		if err != nil {
+			log.Fatal(err)
+		}
+		tmplat := filepath.Join(dir, "preview.tex")
+		tmpcls := filepath.Join(dir, "dapper-invoice.cls")
+
+		CopyDir("Fonts", filepath.Join(dir, "Fonts"))
+		CopyFile("dapper-invoice.cls", tmpcls)
+
+		err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			go func() {
+				command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
+				command.Dir = dir
+				out, err := command.CombinedOutput()
+				if err != nil {
+					log.Fatal(err)
+				}
+				outstr := string(out)
+				if strings.Contains(strings.ToLower(outstr), "rerun") {
+					command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
+					command.Dir = dir
+					command.Run()
+				}
+				CopyFile(filepath.Join(dir, "preview.pdf"), path)
+			}()
+		}
+	}
 }
