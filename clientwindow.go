@@ -9,10 +9,11 @@ import (
 type ClientEdit struct {
 	widgets.QDialog
 
-	nameField    *widgets.QLineEdit
-	contactField *widgets.QLineEdit
-	streetField  *widgets.QLineEdit
-	cityField    *widgets.QLineEdit
+	nameField      *widgets.QLineEdit
+	contactField   *widgets.QLineEdit
+	streetField    *widgets.QLineEdit
+	cityField      *widgets.QLineEdit
+	locationButton *widgets.QPushButton
 
 	client Client
 }
@@ -26,11 +27,15 @@ func initClientEditDialog(client Client, parent *widgets.QWidget) *ClientEdit {
 	this.contactField = widgets.NewQLineEdit(nil)
 	this.streetField = widgets.NewQLineEdit(nil)
 	this.cityField = widgets.NewQLineEdit(nil)
+	this.locationButton = widgets.NewQPushButton2("Change...", nil)
 	formLayout.AddRow3("Client Name", this.nameField)
 	formLayout.AddRow3("Client Contact", this.contactField)
 	formLayout.AddRow3("Client Street", this.streetField)
 	formLayout.AddRow3("Client City", this.cityField)
+	formLayout.AddRow3("Save Location", this.locationButton)
+	this.locationButton.ConnectPressed(this.chooseFile)
 	this.ConnectCloseEvent(this.onClose)
+	this.fromClient()
 	return this
 }
 
@@ -48,7 +53,17 @@ func (window *ClientEdit) toClient() {
 	window.client.Street = window.streetField.Text()
 }
 
+func (window *ClientEdit) chooseFile() {
+	name := chooseFile(window.ParentWidget(), window.client.file)
+	if len(name) > 0 {
+		window.client.file = name
+	}
+}
+
 func (window *ClientEdit) onClose(event *gui.QCloseEvent) {
 	window.toClient()
+	if len(window.client.file) == 0 {
+		window.chooseFile()
+	}
 	window.client.EncodeClient()
 }

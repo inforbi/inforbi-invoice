@@ -60,6 +60,7 @@ func initMainWindow() *MainWindow {
 
 	this.clientChoose.ConnectPressed(this.chooseClient)
 	this.clientEdit.ConnectPressed(this.editClient)
+	this.clientCreate.ConnectPressed(this.createClient)
 
 	upperGrid.AddWidget(this.clientName, 0, 0, core.Qt__AlignLeft)
 	upperGrid.AddWidget(this.clientChoose, 0, 1, core.Qt__AlignLeft)
@@ -78,6 +79,7 @@ func initMainWindow() *MainWindow {
 
 	this.invoiceChoose.ConnectPressed(this.chooseInvoice)
 	this.invoiceEdit.ConnectPressed(this.editInvoice)
+	this.invoiceCreate.ConnectPressed(this.createInvoice)
 
 	this.previewBtn = widgets.NewQPushButton2("Preview", nil)
 	this.saveTexBtn = widgets.NewQPushButton2("Save .tex", nil)
@@ -85,6 +87,7 @@ func initMainWindow() *MainWindow {
 
 	this.previewBtn.ConnectPressed(this.preview)
 	this.savePdfBtn.ConnectPressed(this.savePDF)
+	this.saveTexBtn.ConnectPressed(this.saveTex)
 
 	lowerGrid.AddWidget(this.previewBtn, 0, 0, core.Qt__AlignCenter)
 	lowerGrid.AddWidget(this.saveTexBtn, 0, 1, core.Qt__AlignCenter)
@@ -92,8 +95,21 @@ func initMainWindow() *MainWindow {
 
 	this.updateInvoice()
 	this.updateClient()
+	this.updateBottomBtns()
 
 	return this
+}
+
+func (window *MainWindow) createClient() {
+	selectedClient = Client{}
+	window.editClient()
+}
+
+func (window *MainWindow) createInvoice() {
+	if clientSelected {
+		selectedInvoice = Invoice{}
+		window.editInvoice()
+	}
 }
 
 func (window *MainWindow) chooseClient() {
@@ -120,16 +136,30 @@ func (window *MainWindow) chooseClient() {
 func (window *MainWindow) editClient() {
 	cw := initClientEditDialog(selectedClient, window.ParentWidget())
 	cw.Exec()
-	selectedClient = cw.client
-	window.updateClient()
+	if cw.Result() == 0 {
+		selectedClient = cw.client
+		window.updateClient()
+		if !clientSelected {
+			clientSelected = true
+		}
+	} else {
+		selectedClient.EncodeClient()
+	}
+
 }
 
 func (window *MainWindow) editInvoice() {
 	iw := initInvoiceEditDialog(selectedInvoice, window.ParentWidget())
-	//iw.SetWindowModality(core.Qt__ApplicationModal)
 	iw.Exec()
-	selectedInvoice = iw.invoice
-	window.updateInvoice()
+	if iw.Result() == 0 {
+		selectedInvoice = iw.invoice
+		window.updateInvoice()
+		if !invoiceSelected {
+			invoiceSelected = true
+		}
+	} else {
+		selectedInvoice.EncodeInvoice()
+	}
 }
 
 func (window *MainWindow) chooseInvoice() {
@@ -159,6 +189,7 @@ func (window *MainWindow) updateInvoice() {
 	window.invoiceEdit.SetEnabled(clientSelected && invoiceSelected)
 	window.invoiceChoose.SetEnabled(clientSelected)
 	window.invoiceCreate.SetEnabled(invoiceSelected)
+	window.updateBottomBtns()
 }
 
 func (window *MainWindow) updateClient() {
@@ -166,6 +197,14 @@ func (window *MainWindow) updateClient() {
 		window.clientName.SetText(selectedClient.Name)
 	}
 	window.clientEdit.SetEnabled(clientSelected)
+	window.updateBottomBtns()
+}
+
+func (window *MainWindow) updateBottomBtns() {
+	condition := invoiceSelected && clientSelected
+	window.previewBtn.SetEnabled(condition)
+	window.savePdfBtn.SetEnabled(condition)
+	window.saveTexBtn.SetEnabled(condition)
 }
 
 func (window *MainWindow) generateLatex() string {
@@ -215,7 +254,27 @@ func (window *MainWindow) preview() {
 			os.RemoveAll(dir)
 		}()
 	}()
-	//fmt.Println(string(out))
+}
+
+func (window *MainWindow) saveTex() {
+	wd, err := os.Getwd()
+	if err != nil {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+	}
+	dialog := widgets.NewQFileDialog(window, 0)
+	path := dialog.GetSaveFileName(window, "Save latex", wd,
+		"*.tex", "*.tex", 0)
+	if len(path) == 0 {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
+		return
+	}
+	latex := window.generateLatex()
+	err = ioutil.WriteFile(path, []byte(latex), 0644)
+	if err != nil {
+		log.Fatal(err)
+		widgets.NewQErrorMessage(window).ShowMessage("Couldn't save file! " + err.Error())
+	}
+
 }
 
 func (window *MainWindow) savePDF() {
@@ -225,38 +284,43 @@ func (window *MainWindow) savePDF() {
 	}
 	dialog := widgets.NewQFileDialog(window, 0)
 	path := dialog.GetSaveFileName(window, "Save invoice", wd,
-		"*.pdf", "", 0)
-	if len(path) > 0 {
-		latex := window.generateLatex()
-		dir, err := ioutil.TempDir("", "save")
-		if err != nil {
-			log.Fatal(err)
-		}
-		tmplat := filepath.Join(dir, "preview.tex")
-		tmpcls := filepath.Join(dir, "dapper-invoice.cls")
+		"*.pdf", "*.pdf", 0)
+	if len(path) == 0 {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
+		return
+	}
 
-		CopyDir("Fonts", filepath.Join(dir, "Fonts"))
-		CopyFile("dapper-invoice.cls", tmpcls)
+	latex := window.generateLatex()
+	dir, err := ioutil.TempDir("", "save")
+	if err != nil {
+		log.Fatal(err)
+	}
+	tmplat := filepath.Join(dir, "preview.tex")
+	tmpcls := filepath.Join(dir, "dapper-invoice.cls")
 
-		err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			go func() {
+	CopyDir("Fonts", filepath.Join(dir, "Fonts"))
+	CopyFile("dapper-invoice.cls", tmpcls)
+
+	err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
+	if err != nil {
+		log.Fatal(err)
+		widgets.NewQErrorMessage(window).ShowMessage("Couldn't save file! " + err.Error())
+	} else {
+		go func() {
+			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
+			command.Dir = dir
+			out, err := command.CombinedOutput()
+			if err != nil {
+				log.Fatal(err)
+			}
+			outstr := string(out)
+			if strings.Contains(strings.ToLower(outstr), "rerun") {
 				command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
 				command.Dir = dir
-				out, err := command.CombinedOutput()
-				if err != nil {
-					log.Fatal(err)
-				}
-				outstr := string(out)
-				if strings.Contains(strings.ToLower(outstr), "rerun") {
-					command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
-					command.Dir = dir
-					command.Run()
-				}
-				CopyFile(filepath.Join(dir, "preview.pdf"), path)
-			}()
-		}
+				command.Run()
+			}
+			CopyFile(filepath.Join(dir, "preview.pdf"), path)
+		}()
 	}
+
 }

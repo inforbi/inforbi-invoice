@@ -10,11 +10,12 @@ import (
 type InvoiceEdit struct {
 	widgets.QDialog
 
-	numberSpinner *widgets.QSpinBox
-	projectField  *widgets.QLineEdit
-	dueDays       *widgets.QSpinBox
-	itemsButton   *widgets.QPushButton
-	totalLabel    *widgets.QLabel
+	numberSpinner  *widgets.QSpinBox
+	projectField   *widgets.QLineEdit
+	dueDays        *widgets.QSpinBox
+	itemsButton    *widgets.QPushButton
+	totalLabel     *widgets.QLabel
+	locationButton *widgets.QPushButton
 
 	invoice Invoice
 }
@@ -30,11 +31,14 @@ func initInvoiceEditDialog(invoice Invoice, parent *widgets.QWidget) *InvoiceEdi
 	this.itemsButton = widgets.NewQPushButton2("Change Items (0)", nil)
 	this.itemsButton.ConnectPressed(this.openItems)
 	this.totalLabel = widgets.NewQLabel2("0€", nil, 0)
+	this.locationButton = widgets.NewQPushButton2("Change...", nil)
 	formLayout.AddRow3("Number", this.numberSpinner)
 	formLayout.AddRow3("Project", this.projectField)
 	formLayout.AddRow3("Due Days", this.dueDays)
 	formLayout.AddRow3("Items", this.itemsButton)
 	formLayout.AddRow3("Total", this.totalLabel)
+	formLayout.AddRow3("Save Location", this.locationButton)
+	this.locationButton.ConnectPressed(this.chooseFile)
 	this.ConnectCloseEvent(this.onClose)
 	this.fromInvoice()
 	return this
@@ -62,7 +66,17 @@ func (window *InvoiceEdit) openItems() {
 	window.fromInvoice()
 }
 
+func (window *InvoiceEdit) chooseFile() {
+	name := chooseFile(window.ParentWidget(), window.invoice.file)
+	if len(name) > 0 {
+		window.invoice.file = name
+	}
+}
+
 func (window *InvoiceEdit) onClose(event *gui.QCloseEvent) {
 	window.toInvoice()
+	for len(window.invoice.file) == 0 {
+		window.chooseFile()
+	}
 	window.invoice.EncodeInvoice()
 }
