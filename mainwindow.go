@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net"
+	"bufio"
 )
 
 type MainWindow struct {
@@ -28,9 +30,10 @@ type MainWindow struct {
 	invoiceEdit   *widgets.QPushButton
 	invoiceCreate *widgets.QPushButton
 
-	previewBtn *widgets.QPushButton
-	saveTexBtn *widgets.QPushButton
-	savePdfBtn *widgets.QPushButton
+	previewBtn   *widgets.QPushButton
+	saveTexBtn   *widgets.QPushButton
+	savePdfBtn   *widgets.QPushButton
+	useRemoteBox *widgets.QCheckBox
 }
 
 var (
@@ -85,14 +88,18 @@ func initMainWindow() *MainWindow {
 	this.previewBtn = widgets.NewQPushButton2("Preview", nil)
 	this.saveTexBtn = widgets.NewQPushButton2("Save .tex", nil)
 	this.savePdfBtn = widgets.NewQPushButton2("Save .pdf", nil)
+	this.useRemoteBox = widgets.NewQCheckBox2("Use remote-server for rendering", nil)
+	this.useRemoteBox.SetChecked(true)
 
 	this.previewBtn.ConnectPressed(this.preview)
 	this.savePdfBtn.ConnectPressed(this.savePDF)
 	this.saveTexBtn.ConnectPressed(this.saveTex)
 
-	lowerGrid.AddWidget(this.previewBtn, 0, 0, core.Qt__AlignCenter)
-	lowerGrid.AddWidget(this.saveTexBtn, 0, 1, core.Qt__AlignCenter)
-	lowerGrid.AddWidget(this.savePdfBtn, 0, 2, core.Qt__AlignCenter)
+	lowerGrid.SetSpacing(2)
+	lowerGrid.AddWidget3(this.useRemoteBox, 0, 0, 1, 3, core.Qt__AlignCenter)
+	lowerGrid.AddWidget(this.previewBtn, 1, 0, core.Qt__AlignCenter)
+	lowerGrid.AddWidget(this.saveTexBtn, 1, 1, core.Qt__AlignCenter)
+	lowerGrid.AddWidget(this.savePdfBtn, 1, 2, core.Qt__AlignCenter)
 
 	this.updateInvoice()
 	this.updateClient()
@@ -224,37 +231,55 @@ func (window *MainWindow) generateLatex() string {
 }
 
 func (window *MainWindow) preview() {
-	latex := window.generateLatex()
 	dir, err := ioutil.TempDir("", "preview")
+	tmpPDF := filepath.Join(dir, "preview.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
-	tmplat := filepath.Join(dir, "preview.tex")
-	tmpcls := filepath.Join(dir, "dapper-invoice.cls")
-
-	CopyDir("Fonts", filepath.Join(dir, "Fonts"))
-	CopyFile("dapper-invoice.cls", tmpcls)
-
-	err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
-	go func() {
-		command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
-		command.Dir = dir
-		out, err := command.CombinedOutput()
+	if window.useRemoteBox.IsChecked() {
+		err := window.remoteRender(tmpPDF)
 		if err != nil {
-			log.Fatal(err)
+			println(err)
 		}
-		outstr := string(out)
-		if strings.Contains(strings.ToLower(outstr), "rerun") {
-			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
-			command.Dir = dir
-			command.Run()
-		}
+		go func() {
+			time.Sleep(1 * time.Second)
+			os.RemoveAll(dir)
+		}()
+
+	} else {
+		window.localRender(dir, tmpPDF)
 		open.Run(filepath.Join(dir, "preview.pdf"))
 		go func() {
 			time.Sleep(1 * time.Second)
 			os.RemoveAll(dir)
 		}()
-	}()
+	}
+
+}
+
+func (window *MainWindow) savePDF() {
+	wd, err := os.Getwd()
+	if err != nil {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+	}
+	dialog := widgets.NewQFileDialog(window, 0)
+	path := dialog.GetSaveFileName(window, "Save invoice", wd,
+		"*.pdf", "*.pdf", 0)
+	if len(path) == 0 {
+		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
+		return
+	}
+
+	if window.useRemoteBox.IsChecked() {
+		window.remoteRender(path)
+	} else {
+		dir, err := ioutil.TempDir("", "save")
+		if err != nil {
+			log.Fatal(err)
+		}
+		window.localRender(dir, path)
+		os.RemoveAll(dir)
+	}
 }
 
 func (window *MainWindow) saveTex() {
@@ -278,50 +303,75 @@ func (window *MainWindow) saveTex() {
 
 }
 
-func (window *MainWindow) savePDF() {
-	wd, err := os.Getwd()
-	if err != nil {
-		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
-	}
-	dialog := widgets.NewQFileDialog(window, 0)
-	path := dialog.GetSaveFileName(window, "Save invoice", wd,
-		"*.pdf", "*.pdf", 0)
-	if len(path) == 0 {
-		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
-		return
-	}
-
+func (window *MainWindow) localRender(target_dir string, target_file string) {
 	latex := window.generateLatex()
-	dir, err := ioutil.TempDir("", "save")
-	if err != nil {
-		log.Fatal(err)
-	}
-	tmplat := filepath.Join(dir, "preview.tex")
-	tmpcls := filepath.Join(dir, "dapper-invoice.cls")
+	tmplat := filepath.Join(target_dir, "preview.tex")
+	tmpcls := filepath.Join(target_dir, "dapper-invoice.cls")
 
-	CopyDir("Fonts", filepath.Join(dir, "Fonts"))
-	CopyFile("dapper-invoice.cls", tmpcls)
+	data.CopyDir("Fonts", filepath.Join(target_dir, "Fonts"))
+	data.CopyFile("dapper-invoice.cls", tmpcls)
 
-	err = ioutil.WriteFile(tmplat, []byte(latex), 0644)
+	err := ioutil.WriteFile(tmplat, []byte(latex), 0644)
 	if err != nil {
 		log.Fatal(err)
 		widgets.NewQErrorMessage(window).ShowMessage("Couldn't save file! " + err.Error())
 	} else {
 		go func() {
-			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
-			command.Dir = dir
+			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "render.tex")
+			command.Dir = target_dir
 			out, err := command.CombinedOutput()
 			if err != nil {
 				log.Fatal(err)
 			}
 			outstr := string(out)
 			if strings.Contains(strings.ToLower(outstr), "rerun") {
-				command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "preview.tex")
-				command.Dir = dir
+				command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "render.tex")
+				command.Dir = target_dir
 				command.Run()
 			}
-			CopyFile(filepath.Join(dir, "preview.pdf"), path)
+			data.CopyFile(filepath.Join(target_dir, "render.pdf"), target_file)
 		}()
 	}
+}
 
+func (window *MainWindow) remoteRender(target_file string) (error) {
+	latex := window.generateLatex()
+	conn, err := net.Dial("tcp", "mineguild.net:7714")
+	if err != nil {
+		println(err)
+		return err
+	}
+	writer := bufio.NewWriter(conn)
+	reader := bufio.NewReader(conn)
+	go func() {
+		writer.WriteString("begin_send" + strconv.Itoa(len(latex)) + "\n")
+		writer.Write([]byte(latex))
+		writer.Flush()
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			widgets.NewQErrorMessage(window).ShowMessage("Error communicating!")
+			return
+		}
+		if strings.Trim(response, "\n") == "success" {
+			println("receiving pdf?")
+			response, err = reader.ReadString('\n')
+			if strings.HasPrefix(response, "begin_send") {
+				println("receiving pdf!")
+				response = strings.TrimPrefix(response, "begin_send")
+				response = strings.Trim(response, "\n")
+				ulen, err := strconv.ParseInt(response, 10, 64)
+				if err != nil {
+					return
+				}
+				ilen := int(ulen)
+				println(ilen)
+				file := data.ReceiveBlob(*reader, ilen)
+				if len(file) == ilen {
+					writer.WriteString("success\n")
+					err = ioutil.WriteFile(target_file, file, 0644)
+				}
+			}
+		}
+	}()
+	return nil
 }
