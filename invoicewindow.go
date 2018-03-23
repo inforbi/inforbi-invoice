@@ -4,6 +4,7 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
+	"github.com/nylser/inforbi-invoice/data"
 	"strconv"
 )
 
@@ -17,10 +18,10 @@ type InvoiceEdit struct {
 	totalLabel     *widgets.QLabel
 	locationButton *widgets.QPushButton
 
-	invoice Invoice
+	invoice data.Invoice
 }
 
-func initInvoiceEditDialog(invoice Invoice, parent *widgets.QWidget) *InvoiceEdit {
+func initInvoiceEditDialog(invoice data.Invoice, parent *widgets.QWidget) *InvoiceEdit {
 	this := NewInvoiceEdit(parent, core.Qt__Dialog)
 	this.invoice = invoice
 	this.SetWindowTitle("Edit Invoice")
@@ -67,15 +68,15 @@ func (window *InvoiceEdit) openItems() {
 }
 
 func (window *InvoiceEdit) chooseFile() {
-	name := chooseFile(window.ParentWidget(), window.invoice.file)
+	name := chooseFile(window.ParentWidget(), window.invoice.GetFile())
 	if len(name) > 0 {
-		window.invoice.file = name
+		window.invoice.SetFile(name)
 	}
 }
 
 func (window *InvoiceEdit) onClose(event *gui.QCloseEvent) {
 	window.toInvoice()
-	for len(window.invoice.file) == 0 {
+	for len(window.invoice.GetFile()) == 0 {
 		window.chooseFile()
 	}
 	window.invoice.EncodeInvoice()

@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"encoding/json"
@@ -34,6 +34,14 @@ func DecodeInvoice(file string) (Invoice, error) {
 		err = errors.New("invalid file")
 	}
 	return invoice, err
+}
+
+func (invoice Invoice) GetFile() (string) {
+	return invoice.file
+}
+
+func (invoice Invoice) SetFile(file string) {
+	invoice.file = file
 }
 
 func (invoice Invoice) EncodeInvoice() error {

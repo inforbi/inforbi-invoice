@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"encoding/json"
@@ -13,6 +13,14 @@ type Client struct {
 	Street  string `json:"street"`
 	City    string `json:"city"`
 	file    string
+}
+
+func (client Client) GetFile() (string) {
+	return client.file
+}
+
+func (client Client) SetFile(file string) {
+	client.file = file
 }
 
 func DecodeClient(file string) (Client, error) {

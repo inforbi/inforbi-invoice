@@ -1,0 +1,80 @@
+%\documentclass[letterpaper]{dapper-invoice}
+%\documentclass[letterpaper,currency=dollar]{dapper-invoice}
+\documentclass[language=ngerman,currency=euro]{dapper-invoice}
+%\documentclass[letterpaper,currency=pound]{dapper-invoice}
+\newcommand{\invoiceNo}{1}
+\newcommand{\balance}{8.80}
+\usepackage[utf8]{inputenc}
+\newcommand{\duein}{14}% days
+
+\newcommand{\me}{Korbinian~Stein}
+\newcommand{\clientName}{Test}
+\newcommand{\clientContact}{Frau Muster}
+\newcommand{\clientStreet}{Street}
+\newcommand{\clientCity}{Munich}
+
+\setmetadata{\me}{inforbi}{\invoiceNo}{\clientName}
+
+\defaultfontfeatures{ Path = ./Fonts/ }
+\usepackage{fontawesome}
+\usepackage[ngerman]{babel}
+
+\begin{document}
+\lfoot{{\color{gray}{\footnotesize Bankverbindung:\\
+Kreissparkasse München Starnberg Ebersberg\\
+IBAN: DE84 7025 0150 0028 1897 44 - BIC: BYLADEM1KMS\\
+Steuernummer: 146/210/70577\\}}}
+\selectlanguage{ngerman}
+\newfontface\mainLightItalic{OpenSans-LightItalic}
+\makeheader{Korbinian Stein\ \mainLightItalic inforbi}{\invoiceNo}
+
+\twocolumnlayout{
+    \begin{infoSection}
+        \infoBox{Kunde}{\clientName \\
+                         \clientStreet \\
+                         \clientCity }
+        \infoBox{Projekt}{TestP}
+        \infoBox{Kontakt}{\clientContact}
+        %\infoSub{\faMobilePhone}{\small\slshape +1~(555)~555-5555}
+        \noalign{\addvspace{8ex}}
+        \infoBox{}{
+            {\large\raisebox{.55\height}\currencysym\huge\formatcurrency{\balance} \arrowbase} \\
+            {\small\color{subduedColor} fällig zum \duedate{\duein}}
+        }
+    \end{infoSection}
+}{
+    \begin{infoSection}
+        \infoBox{\arrowtarget Zu zahlen an}{
+            \me \\
+            Balthasar-Graf-Straße 11 \\
+            82061 Neuried
+        }
+        \noalign{\addvspace{4ex}}
+        \infoSub{\faMobilePhone}{\small\slshape +49~176~72207211}
+        \infoSub{\tiny\faEnvelope}{\small\slshape \emaillink{kstein@inforbi.de}}
+    \end{infoSection}
+}
+
+\drawarrow
+
+\addvspace{4ex}
+
+\begin{hoursItemization}
+	
+	\lineitemu{12.2017}{1.00}{8.80}{Hour}{\item test}
+
+
+%	\lineitemu{12.2017}{2}{26}{Stunden}{\item Webprogrammierung}
+
+ %   \lineitemu{12.2017}{1}{8.80}{Monat}{\item Hosting}
+
+    \beginsummary
+
+    \summaryline{Summe}{\currencysym\formatcurrency{\InvoiceTotal}}
+
+%    \summaryline{Paid}{\currencysym\formatcurrency{50}}
+    \summaryline{Fällig}{\currencysym\formatcurrency{\InvoiceTotal}} % not really any math support (yet)
+
+\end{hoursItemization}
+Gemäß §19 UStG wird keine Umsatzsteuer berechnet.
+\end{document}

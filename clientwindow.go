@@ -4,6 +4,7 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
+	"github.com/nylser/inforbi-invoice/data"
 )
 
 type ClientEdit struct {
@@ -15,10 +16,10 @@ type ClientEdit struct {
 	cityField      *widgets.QLineEdit
 	locationButton *widgets.QPushButton
 
-	client Client
+	client data.Client
 }
 
-func initClientEditDialog(client Client, parent *widgets.QWidget) *ClientEdit {
+func initClientEditDialog(client data.Client, parent *widgets.QWidget) *ClientEdit {
 	this := NewClientEdit(parent, core.Qt__Dialog)
 	this.client = client
 	this.SetWindowTitle("Edit Client")
@@ -54,15 +55,15 @@ func (window *ClientEdit) toClient() {
 }
 
 func (window *ClientEdit) chooseFile() {
-	name := chooseFile(window.ParentWidget(), window.client.file)
+	name := chooseFile(window.ParentWidget(), window.client.GetFile())
 	if len(name) > 0 {
-		window.client.file = name
+		window.client.SetFile(name)
 	}
 }
 
 func (window *ClientEdit) onClose(event *gui.QCloseEvent) {
 	window.toClient()
-	if len(window.client.file) == 0 {
+	if len(window.client.GetFile()) == 0 {
 		window.chooseFile()
 	}
 	window.client.EncodeClient()

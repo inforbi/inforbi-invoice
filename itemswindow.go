@@ -4,13 +4,14 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
+	"github.com/nylser/inforbi-invoice/data"
 )
 
 type ItemsDialog struct {
 	widgets.QDialog
 
 	table   *widgets.QTableWidget
-	invoice *Invoice
+	invoice *data.Invoice
 }
 
 type CustomItem struct {
@@ -30,7 +31,7 @@ func (window *ItemsDialog) createEditor(parent *widgets.QWidget, option *widgets
 
 var firstRow = []string{"Description", "Date", "Quantifier", "Quantity", "Cost/Q", "Total"}
 
-func initItemsWindow(invoice *Invoice, parent *widgets.QWidget) *ItemsDialog {
+func initItemsWindow(invoice *data.Invoice, parent *widgets.QWidget) *ItemsDialog {
 	this := NewItemsDialog(parent, core.Qt__Dialog)
 	this.SetWindowTitle("Edit Invoice Items")
 	this.SetMinimumHeight(500)
@@ -144,10 +145,10 @@ func (window *ItemsDialog) fromItems() {
 }
 
 func (window *ItemsDialog) toItems() {
-	var items []Item
+	var items []data.Item
 	for i := 0; i < window.table.RowCount(); i++ {
 		if !window.isRowEmpty(i) {
-			item := Item{}
+			item := data.Item{}
 			for j := 0; j < 6; j++ {
 				wItem := window.table.Item(i, j)
 				var ok bool

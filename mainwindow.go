@@ -4,6 +4,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
+	"github.com/nylser/inforbi-invoice/data"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,8 +36,8 @@ type MainWindow struct {
 var (
 	clientSelected  = false
 	invoiceSelected = false
-	selectedClient  Client
-	selectedInvoice Invoice
+	selectedClient  data.Client
+	selectedInvoice data.Invoice
 )
 
 func initMainWindow() *MainWindow {
@@ -101,13 +102,13 @@ func initMainWindow() *MainWindow {
 }
 
 func (window *MainWindow) createClient() {
-	selectedClient = Client{}
+	selectedClient = data.Client{}
 	window.editClient()
 }
 
 func (window *MainWindow) createInvoice() {
 	if clientSelected {
-		selectedInvoice = Invoice{}
+		selectedInvoice = data.Invoice{}
 		window.editInvoice()
 	}
 }
@@ -121,7 +122,7 @@ func (window *MainWindow) chooseClient() {
 	path := dialog.GetOpenFileName(window, "Choose client", wd,
 		"*.json", "", 0)
 	if len(path) > 0 {
-		client, err := DecodeClient(path)
+		client, err := data.DecodeClient(path)
 		if err != nil {
 			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
 		} else {
@@ -171,7 +172,7 @@ func (window *MainWindow) chooseInvoice() {
 	path := dialog.GetOpenFileName(window, "Choose invoice", wd,
 		"*.json", "", 0)
 	if len(path) > 0 {
-		invoice, err := DecodeInvoice(path)
+		invoice, err := data.DecodeInvoice(path)
 		if err != nil {
 			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
 		} else {
