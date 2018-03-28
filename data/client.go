@@ -15,11 +15,11 @@ type Client struct {
 	file    string
 }
 
-func (client Client) GetFile() (string) {
+func (client *Client) GetFile() (string) {
 	return client.file
 }
 
-func (client Client) SetFile(file string) {
+func (client *Client) SetFile(file string) {
 	client.file = file
 }
 

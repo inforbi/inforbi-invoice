@@ -40,7 +40,7 @@ func (invoice Invoice) GetFile() (string) {
 	return invoice.file
 }
 
-func (invoice Invoice) SetFile(file string) {
+func (invoice *Invoice) SetFile(file string) {
 	invoice.file = file
 }
 

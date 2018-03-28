@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>common/invoice.pylat</file>
+    </qresource>
+</RCC>

@@ -217,11 +217,9 @@ func (window *MainWindow) updateBottomBtns() {
 
 func (window *MainWindow) generateLatex() string {
 	if clientSelected && invoiceSelected {
-		bytes, err := ioutil.ReadFile("invoice.pylat")
-		if err != nil {
-			panic("Test")
-		}
-		template := string(bytes)
+		file := core.NewQFile2(":/common/invoice.pylat")
+		file.Open(core.QIODevice__ReadOnly)
+		template := file.ReadAll().Data()
 		template = selectedClient.ReplaceTemplate(template)
 		template = selectedInvoice.ReplaceTemplate(template)
 		return template
@@ -236,50 +234,57 @@ func (window *MainWindow) preview() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if window.useRemoteBox.IsChecked() {
-		err := window.remoteRender(tmpPDF)
-		if err != nil {
-			println(err)
+	go func() {
+		if window.useRemoteBox.IsChecked() {
+			err := window.remoteRender(tmpPDF)
+			if err != nil {
+				println(err)
+			}
+			open.Run(tmpPDF)
+			go func() {
+				time.Sleep(1 * time.Second)
+				os.RemoveAll(dir)
+			}()
+
+		} else {
+			window.localRender(dir, tmpPDF)
+			open.Run(tmpPDF)
+			go func() {
+				time.Sleep(1 * time.Second)
+				os.RemoveAll(dir)
+			}()
 		}
-		go func() {
-			time.Sleep(1 * time.Second)
-			os.RemoveAll(dir)
-		}()
-
-	} else {
-		window.localRender(dir, tmpPDF)
-		open.Run(filepath.Join(dir, "preview.pdf"))
-		go func() {
-			time.Sleep(1 * time.Second)
-			os.RemoveAll(dir)
-		}()
-	}
-
+	}()
 }
 
 func (window *MainWindow) savePDF() {
 	wd, err := os.Getwd()
+
 	if err != nil {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
+
 	dialog := widgets.NewQFileDialog(window, 0)
 	path := dialog.GetSaveFileName(window, "Save invoice", wd,
 		"*.pdf", "*.pdf", 0)
+
 	if len(path) == 0 {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
 		return
 	}
 
-	if window.useRemoteBox.IsChecked() {
-		window.remoteRender(path)
-	} else {
-		dir, err := ioutil.TempDir("", "save")
-		if err != nil {
-			log.Fatal(err)
+	go func() {
+		if window.useRemoteBox.IsChecked() {
+			window.remoteRender(path)
+		} else {
+			dir, err := ioutil.TempDir("", "save")
+			if err != nil {
+				log.Fatal(err)
+			}
+			window.localRender(dir, path)
+			os.RemoveAll(dir)
 		}
-		window.localRender(dir, path)
-		os.RemoveAll(dir)
-	}
+	}()
 }
 
 func (window *MainWindow) saveTex() {
@@ -316,21 +321,20 @@ func (window *MainWindow) localRender(target_dir string, target_file string) {
 		log.Fatal(err)
 		widgets.NewQErrorMessage(window).ShowMessage("Couldn't save file! " + err.Error())
 	} else {
-		go func() {
+		command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "render.tex")
+		command.Dir = target_dir
+		out, err := command.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		outstr := string(out)
+		if strings.Contains(strings.ToLower(outstr), "rerun") {
 			command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "render.tex")
 			command.Dir = target_dir
-			out, err := command.CombinedOutput()
-			if err != nil {
-				log.Fatal(err)
-			}
-			outstr := string(out)
-			if strings.Contains(strings.ToLower(outstr), "rerun") {
-				command := exec.Command("xelatex", "-synctex=1", "-interaction=nonstopmode", "render.tex")
-				command.Dir = target_dir
-				command.Run()
-			}
-			data.CopyFile(filepath.Join(target_dir, "render.pdf"), target_file)
-		}()
+			command.Run()
+		}
+		data.CopyFile(filepath.Join(target_dir, "render.pdf"), target_file)
+
 	}
 }
 
@@ -343,35 +347,31 @@ func (window *MainWindow) remoteRender(target_file string) (error) {
 	}
 	writer := bufio.NewWriter(conn)
 	reader := bufio.NewReader(conn)
-	go func() {
-		writer.WriteString("begin_send" + strconv.Itoa(len(latex)) + "\n")
-		writer.Write([]byte(latex))
-		writer.Flush()
-		response, err := reader.ReadString('\n')
-		if err != nil {
-			widgets.NewQErrorMessage(window).ShowMessage("Error communicating!")
-			return
-		}
-		if strings.Trim(response, "\n") == "success" {
-			println("receiving pdf?")
-			response, err = reader.ReadString('\n')
-			if strings.HasPrefix(response, "begin_send") {
-				println("receiving pdf!")
-				response = strings.TrimPrefix(response, "begin_send")
-				response = strings.Trim(response, "\n")
-				ulen, err := strconv.ParseInt(response, 10, 64)
-				if err != nil {
-					return
-				}
-				ilen := int(ulen)
-				println(ilen)
-				file := data.ReceiveBlob(*reader, ilen)
-				if len(file) == ilen {
-					writer.WriteString("success\n")
-					err = ioutil.WriteFile(target_file, file, 0644)
-				}
+
+	writer.WriteString("begin_send" + strconv.Itoa(len(latex)) + "\n")
+	writer.Write([]byte(latex))
+	writer.Flush()
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		widgets.NewQErrorMessage(window).ShowMessage("Error communicating!")
+		return err
+	}
+	if strings.Trim(response, "\n") == "success" {
+		response, err = reader.ReadString('\n')
+		if strings.HasPrefix(response, "begin_send") {
+			response = strings.TrimPrefix(response, "begin_send")
+			response = strings.Trim(response, "\n")
+			ulen, err := strconv.ParseInt(response, 10, 64)
+			if err != nil {
+				return err
+			}
+			ilen := int(ulen)
+			file := data.ReceiveBlob(*reader, ilen)
+			if len(file) == ilen {
+				writer.WriteString("success\n")
+				err = ioutil.WriteFile(target_file, file, 0644)
 			}
 		}
-	}()
+	}
 	return nil
 }
