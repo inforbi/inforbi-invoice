@@ -350,8 +350,8 @@ func (window *MainWindow) localRender(target_dir string, target_file string) {
 
 func (window *MainWindow) remoteRender(target_file string) error {
 	latex := window.generateLatex()
-	//conn, err := net.Dial("tcp", "mineguild.net:7714")
-	conn, err := net.Dial("tcp", "localhost:7714")
+	conn, err := net.Dial("tcp", "mineguild.net:7714")
+	//conn, err := net.Dial("tcp", "localhost:7714")
 	if err != nil {
 		println(err)
 		return err
