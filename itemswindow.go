@@ -10,8 +10,10 @@ import (
 type ItemsDialog struct {
 	widgets.QDialog
 
-	table   *widgets.QTableWidget
-	invoice *data.Invoice
+	table           *widgets.QTableWidget
+	rowRemoveButton *widgets.QPushButton
+	undoButton		*widgets.QPushButton
+	invoice         *data.Invoice
 }
 
 type CustomItem struct {
@@ -38,7 +40,11 @@ func initItemsWindow(invoice *data.Invoice, parent *widgets.QWidget) *ItemsDialo
 	grid := widgets.NewQGridLayout(this)
 	this.invoice = invoice
 	this.table = widgets.NewQTableWidget2(len(invoice.Items)+1, 6, nil)
+	this.rowRemoveButton = widgets.NewQPushButton2("Remove selected rows", nil)
+	this.undoButton = widgets.NewQPushButton2("Undo remove", nil)
 	grid.AddWidget3(this.table, 1, 0, 5, 6, core.Qt__AlignLeft)
+	grid.AddWidget3(this.rowRemoveButton, 6, 5, 1, 1, core.Qt__AlignRight)
+	grid.AddWidget3(this.undoButton, 6, 4, 1, 1, core.Qt__AlignRight)
 	this.table.SetHorizontalHeaderLabels(firstRow)
 	this.table.SetSizeAdjustPolicy(widgets.QAbstractScrollArea__AdjustToContents)
 	this.table.SetItemDelegateForColumn(3, this.initCustomItem())
@@ -46,6 +52,9 @@ func initItemsWindow(invoice *data.Invoice, parent *widgets.QWidget) *ItemsDialo
 	this.table.ConnectItemChanged(this.itemChanged)
 	this.table.SizePolicy().SetHorizontalPolicy(widgets.QSizePolicy__Expanding)
 	this.table.HorizontalHeader().SetStretchLastSection(true)
+
+	this.rowRemoveButton.ConnectPressed(this.removeSelectedRows)
+
 	this.AdjustSize()
 	this.ConnectCloseEvent(this.onClose)
 	this.fromItems()
@@ -54,6 +63,20 @@ func initItemsWindow(invoice *data.Invoice, parent *widgets.QWidget) *ItemsDialo
 
 func (window *ItemsDialog) onClose(event *gui.QCloseEvent) {
 	window.toItems()
+}
+
+func (window *ItemsDialog) removeSelectedRows() {
+	selModel := window.table.SelectionModel()
+	toRemove := []int{}
+	for _, d := range selModel.SelectedRows(0) {
+		toRemove = append(toRemove, d.Row())
+	}
+
+
+	for _, i := range toRemove {
+		println(i)
+		window.table.RemoveRow(i)
+	}
 }
 
 func (window *ItemsDialog) itemChanged(new *widgets.QTableWidgetItem) {
