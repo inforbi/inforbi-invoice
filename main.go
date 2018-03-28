@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/nylser/inforbi-invoice/data"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"io/ioutil"
 	"os"
-	"github.com/nylser/inforbi-invoice/data"
+	"time"
 )
 
 func main() {
@@ -24,22 +24,13 @@ func main() {
 		SinglePrice: 8.8,
 		Quantifier:  "Hour",
 		Quantity:    1,
-	}}}
+	}}, Date: time.Now().Format("2006-01-02")}
 	invoice.SetFile("testInvoice.json")
 	fmt.Println(invoice)
 	err = invoice.EncodeInvoice()
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	cont, err := ioutil.ReadFile("invoice.pylat")
-	if err != nil {
-		fmt.Println(err)
-	}
-	template := string(cont)
-	template = client.ReplaceTemplate(template)
-	template = invoice.ReplaceTemplate(template)
-	ioutil.WriteFile("invoice.tex", []byte(template), 0644)
 
 	core.QCoreApplication_SetApplicationName("Invoice Creator")
 

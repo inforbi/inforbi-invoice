@@ -13,6 +13,7 @@ type Invoice struct {
 	Project string `json:"project"`
 	DueDays int    `json:"dueDays"`
 	Items   []Item `json:"items"`
+	Date    string `json:"date"`
 	file    string
 }
 
@@ -36,7 +37,7 @@ func DecodeInvoice(file string) (Invoice, error) {
 	return invoice, err
 }
 
-func (invoice Invoice) GetFile() (string) {
+func (invoice Invoice) GetFile() string {
 	return invoice.file
 }
 

@@ -1,20 +1,20 @@
 package main
 
 import (
+	"bufio"
+	"github.com/nylser/inforbi-invoice/data"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"github.com/nylser/inforbi-invoice/data"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-	"net"
-	"bufio"
 )
 
 type MainWindow struct {
@@ -115,7 +115,7 @@ func (window *MainWindow) createClient() {
 
 func (window *MainWindow) createInvoice() {
 	if clientSelected {
-		selectedInvoice = data.Invoice{}
+		selectedInvoice = data.Invoice{Date: time.Now().Format("2006-01-02")}
 		window.editInvoice()
 	}
 }
@@ -310,11 +310,21 @@ func (window *MainWindow) saveTex() {
 
 func (window *MainWindow) localRender(target_dir string, target_file string) {
 	latex := window.generateLatex()
-	tmplat := filepath.Join(target_dir, "preview.tex")
-	tmpcls := filepath.Join(target_dir, "dapper-invoice.cls")
+	tmplat := filepath.Join(target_dir, "render.tex")
+	os.Mkdir(filepath.Join(target_dir, "Fonts"), 0777)
+	list := []string{"/common/Fonts/FontAwesome.otf", "/common/Fonts/OpenSans-Bold.ttf",
+		"/common/Fonts/OpenSans-Italic.ttf", "/common/Fonts/OpenSans-LightItalic.ttf", "/common/Fonts/OpenSans-Regular.ttf",
+		"/common/dapper-invoice.cls"}
 
-	data.CopyDir("Fonts", filepath.Join(target_dir, "Fonts"))
-	data.CopyFile("dapper-invoice.cls", tmpcls)
+	for _, file := range list {
+		target := filepath.Join(target_dir, strings.TrimPrefix(file, "/common/"))
+		qFile := core.NewQFile2(":" + file)
+		qFile.Open(core.QIODevice__ReadOnly)
+		qFile.Copy(target)
+		print(target)
+	}
+
+	print(target_dir)
 
 	err := ioutil.WriteFile(tmplat, []byte(latex), 0644)
 	if err != nil {
@@ -338,9 +348,10 @@ func (window *MainWindow) localRender(target_dir string, target_file string) {
 	}
 }
 
-func (window *MainWindow) remoteRender(target_file string) (error) {
+func (window *MainWindow) remoteRender(target_file string) error {
 	latex := window.generateLatex()
-	conn, err := net.Dial("tcp", "mineguild.net:7714")
+	//conn, err := net.Dial("tcp", "mineguild.net:7714")
+	conn, err := net.Dial("tcp", "localhost:7714")
 	if err != nil {
 		println(err)
 		return err
@@ -357,6 +368,8 @@ func (window *MainWindow) remoteRender(target_file string) (error) {
 		return err
 	}
 	if strings.Trim(response, "\n") == "success" {
+		writer.WriteString(selectedInvoice.Date + "\n")
+		writer.Flush()
 		response, err = reader.ReadString('\n')
 		if strings.HasPrefix(response, "begin_send") {
 			response = strings.TrimPrefix(response, "begin_send")
@@ -366,7 +379,7 @@ func (window *MainWindow) remoteRender(target_file string) (error) {
 				return err
 			}
 			ilen := int(ulen)
-			file := data.ReceiveBlob(*reader, ilen)
+			file := data.ReceiveBlob(reader, ilen)
 			if len(file) == ilen {
 				writer.WriteString("success\n")
 				err = ioutil.WriteFile(target_file, file, 0644)

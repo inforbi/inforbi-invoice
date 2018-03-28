@@ -1,5 +1,12 @@
 <RCC>
     <qresource prefix="/">
         <file>common/invoice.pylat</file>
+        <file>common/dapper-invoice.cls</file>
+        <file>common/Fonts/Apache License.txt</file>
+        <file>common/Fonts/FontAwesome.otf</file>
+        <file>common/Fonts/OpenSans-Bold.ttf</file>
+        <file>common/Fonts/OpenSans-Italic.ttf</file>
+        <file>common/Fonts/OpenSans-LightItalic.ttf</file>
+        <file>common/Fonts/OpenSans-Regular.ttf</file>
     </qresource>
 </RCC>

@@ -2,7 +2,7 @@ package data
 
 import "bufio"
 
-func ReceiveBlob(reader bufio.Reader, length int) ([]byte) {
+func ReceiveBlob(reader *bufio.Reader, length int) []byte {
 	file := make([]byte, 0, length)
 	buf := make([]byte, 256)
 	read := 0
