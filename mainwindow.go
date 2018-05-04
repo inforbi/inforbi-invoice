@@ -41,6 +41,7 @@ var (
 	invoiceSelected = false
 	selectedClient  data.Client
 	selectedInvoice data.Invoice
+	lastOpenedPath = ""
 )
 
 func initMainWindow() *MainWindow {
@@ -121,14 +122,19 @@ func (window *MainWindow) createInvoice() {
 }
 
 func (window *MainWindow) chooseClient() {
-	wd, err := os.Getwd()
-	if err != nil {
-		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+	openPath := lastOpenedPath
+	if len(lastOpenedPath) == 0 {
+		wd, err := os.Getwd()
+		if err != nil {
+			widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+		}
+		openPath = wd
 	}
 	dialog := widgets.NewQFileDialog(window, 0)
-	path := dialog.GetOpenFileName(window, "Choose client", wd,
+	path := dialog.GetOpenFileName(window, "Choose client", openPath,
 		"*.json", "", 0)
 	if len(path) > 0 {
+		lastOpenedPath = filepath.Dir(path)
 		client, err := data.DecodeClient(path)
 		if err != nil {
 			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
@@ -171,14 +177,19 @@ func (window *MainWindow) editInvoice() {
 }
 
 func (window *MainWindow) chooseInvoice() {
-	wd, err := os.Getwd()
-	if err != nil {
-		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+	openPath := lastOpenedPath
+	if len(lastOpenedPath) == 0 {
+		wd, err := os.Getwd()
+		if err != nil {
+			widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
+		}
+		openPath = wd
 	}
 	dialog := widgets.NewQFileDialog(window, 0)
-	path := dialog.GetOpenFileName(window, "Choose invoice", wd,
+	path := dialog.GetOpenFileName(window, "Choose invoice", openPath,
 		"*.json", "", 0)
 	if len(path) > 0 {
+		lastOpenedPath = filepath.Dir(path)
 		invoice, err := data.DecodeInvoice(path)
 		if err != nil {
 			widgets.NewQErrorMessage(window).ShowMessage("Your selected file doesn't seem to be valid!")
@@ -264,8 +275,12 @@ func (window *MainWindow) savePDF() {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
 
+	if len(lastOpenedPath) == 0{
+		lastOpenedPath = wd
+	}
+
 	dialog := widgets.NewQFileDialog(window, 0)
-	path := dialog.GetSaveFileName(window, "Save invoice", wd,
+	path := dialog.GetSaveFileName(window, "Save invoice", lastOpenedPath,
 		"*.pdf", "*.pdf", 0)
 
 	if len(path) == 0 {
@@ -292,8 +307,11 @@ func (window *MainWindow) saveTex() {
 	if err != nil {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
+	if len(lastOpenedPath) == 0{
+		lastOpenedPath = wd
+	}
 	dialog := widgets.NewQFileDialog(window, 0)
-	path := dialog.GetSaveFileName(window, "Save latex", wd,
+	path := dialog.GetSaveFileName(window, "Save latex", lastOpenedPath,
 		"*.tex", "*.tex", 0)
 	if len(path) == 0 {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't save file without selected destination!")
