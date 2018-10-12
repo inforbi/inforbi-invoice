@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/nylser/inforbi-invoice/data"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
-	"github.com/nylser/inforbi-invoice/data"
+	"math"
 )
 
 type ItemsDialog struct {
@@ -28,6 +29,8 @@ func (window *ItemsDialog) initCustomItem() *CustomItem {
 
 func (window *ItemsDialog) createEditor(parent *widgets.QWidget, option *widgets.QStyleOptionViewItem, index *core.QModelIndex) *widgets.QWidget {
 	editor := widgets.NewQDoubleSpinBox(parent)
+	editor.SetMaximum(math.MaxFloat64)
+	editor.SetMinimum(0)
 	return editor.QWidget_PTR()
 }
 

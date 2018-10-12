@@ -116,7 +116,29 @@ func (window *MainWindow) createClient() {
 
 func (window *MainWindow) createInvoice() {
 	if clientSelected {
-		selectedInvoice = data.Invoice{Date: time.Now().Format("2006-01-02")}
+		if invoiceSelected {
+			var reply widgets.QMessageBox__StandardButton
+			reply = widgets.QMessageBox_Question(window, "Create new invoice based on old one?", "Create new invoice based on old one?",
+				widgets.QMessageBox__Yes|widgets.QMessageBox__No, widgets.QMessageBox__Yes)
+			if reply == widgets.QMessageBox__Yes {
+				selectedInvoice.Date = time.Now().Format("2006-01-02")
+				file := selectedInvoice.GetFile()
+				newfile := strings.Replace(file, strconv.Itoa(selectedInvoice.Number),
+					strconv.Itoa(selectedInvoice.Number+1), 1)
+				if file == newfile {
+					ext := filepath.Ext(file)
+					file = strings.Replace(file, ext, "_new"+ext, 1)
+				} else {
+					file = newfile
+				}
+				selectedInvoice.SetFile(file)
+				selectedInvoice.Number = selectedInvoice.Number+1
+				selectedInvoice = selectedInvoice
+			} else {
+				selectedInvoice = data.Invoice{Date: time.Now().Format("2006-01-02")}
+			}
+		}
+
 		window.editInvoice()
 	}
 }
@@ -207,7 +229,7 @@ func (window *MainWindow) updateInvoice() {
 	}
 	window.invoiceEdit.SetEnabled(clientSelected && invoiceSelected)
 	window.invoiceChoose.SetEnabled(clientSelected)
-	window.invoiceCreate.SetEnabled(invoiceSelected)
+	window.invoiceCreate.SetEnabled(clientSelected)
 	window.updateBottomBtns()
 }
 
