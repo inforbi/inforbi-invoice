@@ -1,18 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"github.com/nylser/inforbi-invoice/data"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
 	"os"
-	"time"
 )
 
 func main() {
 	// Create application
 	app := widgets.NewQApplication(len(os.Args), os.Args)
-	client := data.Client{Name: "Test", City: "Munich", Contact: "Frau Muster", Street: "Street"}
+	/*client := data.Client{Name: "Test", City: "Munich", Contact: "Frau Muster", Street: "Street"}
 	client.SetFile("testClient.json")
 	err := client.EncodeClient()
 	if err != nil {
@@ -30,7 +27,7 @@ func main() {
 	err = invoice.EncodeInvoice()
 	if err != nil {
 		fmt.Println(err)
-	}
+	}*/
 
 	core.QCoreApplication_SetApplicationName("Invoice Creator")
 
