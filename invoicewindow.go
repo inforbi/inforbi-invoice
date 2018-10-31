@@ -5,6 +5,7 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
+	"math"
 	"strconv"
 )
 
@@ -27,9 +28,11 @@ func initInvoiceEditDialog(invoice data.Invoice, parent *widgets.QWidget) *Invoi
 	this.invoice = invoice
 	this.SetWindowTitle("Edit Invoice")
 	formLayout := widgets.NewQFormLayout(this)
-	this.numberSpinner = widgets.NewQSpinBox(nil)
+	this.numberSpinner = widgets.NewQSpinBox(nil, )
+	this.numberSpinner.SetMaximum(math.MaxInt32)
+	this.numberSpinner.SetMinimum(math.MinInt32)
 	this.projectField = widgets.NewQLineEdit(nil)
-	this.dueDays = widgets.NewQSpinBox(nil)
+	this.dueDays = widgets.NewQSpinBox (nil)
 	this.itemsButton = widgets.NewQPushButton2("Change Items (0)", nil)
 	this.itemsButton.ConnectPressed(this.openItems)
 	this.totalLabel = widgets.NewQLabel2("0€", nil, 0)
