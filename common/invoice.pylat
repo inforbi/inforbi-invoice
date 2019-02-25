@@ -20,10 +20,13 @@
 \usepackage[ngerman]{babel}
 
 \begin{document}
-\lfoot{{\color{gray}{\footnotesize Bankverbindung:\\
-Kreissparkasse München Starnberg Ebersberg\\
-IBAN: DE84 7025 0150 0028 1897 44 - BIC: BYLADEM1KMS\\
-Steuernummer: 146/210/70577\\}}}
+\lfoot{
+    \color{red}{Achtung: Neue Bankverbindung!}\\
+    {\color{gray}{\footnotesize Bankverbindung:\\
+    n26 Deutschland\\
+    IBAN: DE02 1001 1001 2624 4476 86 - BIC: NTSBDEB1XXX\\
+    Steuernummer: 146/210/70577\\}}
+    }
 \selectlanguage{ngerman}
 \newfontface\mainLightItalic{OpenSans-LightItalic}
 \makeheader{Korbinian Stein\ \mainLightItalic inforbi}{\invoiceNo}

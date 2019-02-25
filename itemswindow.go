@@ -1,11 +1,12 @@
 package main
 
 import (
+	"math"
+
 	"github.com/nylser/inforbi-invoice/data"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
-	"math"
 )
 
 type ItemsDialog struct {
@@ -13,7 +14,7 @@ type ItemsDialog struct {
 
 	table           *widgets.QTableWidget
 	rowRemoveButton *widgets.QPushButton
-	undoButton		*widgets.QPushButton
+	undoButton      *widgets.QPushButton
 	invoice         *data.Invoice
 }
 
@@ -75,7 +76,6 @@ func (window *ItemsDialog) removeSelectedRows() {
 		toRemove = append(toRemove, d.Row())
 	}
 
-
 	for _, i := range toRemove {
 		println(i)
 		window.table.RemoveRow(i)
@@ -96,8 +96,8 @@ func (window *ItemsDialog) itemChanged(new *widgets.QTableWidgetItem) {
 		var ok bool
 		var col3, col4 float64
 		if window.table.Item(new.Row(), 3) != nil && window.table.Item(new.Row(), 4) != nil {
-			col3 = window.table.Item(new.Row(), 3).Data(0).ToDouble(ok)
-			col4 = window.table.Item(new.Row(), 4).Data(0).ToDouble(ok)
+			col3 = window.table.Item(new.Row(), 3).Data(0).ToDouble(&ok)
+			col4 = window.table.Item(new.Row(), 4).Data(0).ToDouble(&ok)
 		}
 		new5 := widgets.NewQTableWidgetItem(0)
 		new5.SetData(0, core.NewQVariant12(col3*col4))
@@ -186,9 +186,9 @@ func (window *ItemsDialog) toItems() {
 				case 2:
 					item.Quantifier = wItem.Text()
 				case 3:
-					item.Quantity = wItem.Data(0).ToDouble(ok)
+					item.Quantity = wItem.Data(0).ToDouble(&ok)
 				case 4:
-					item.SinglePrice = wItem.Data(0).ToDouble(ok)
+					item.SinglePrice = wItem.Data(0).ToDouble(&ok)
 				case 5:
 					// Do nothing
 				}
