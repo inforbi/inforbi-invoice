@@ -2,10 +2,6 @@ package main
 
 import (
 	"bufio"
-	"github.com/nylser/inforbi-invoice/data"
-	"github.com/skratchdot/open-golang/open"
-	"github.com/therecipe/qt/core"
-	"github.com/therecipe/qt/widgets"
 	"io/ioutil"
 	"log"
 	"net"
@@ -15,6 +11,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/inforbi/inforbi-invoice/data"
+	"github.com/skratchdot/open-golang/open"
+	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/widgets"
 )
 
 type MainWindow struct {
@@ -41,7 +42,7 @@ var (
 	invoiceSelected = false
 	selectedClient  data.Client
 	selectedInvoice data.Invoice
-	lastOpenedPath = ""
+	lastOpenedPath  = ""
 )
 
 func initMainWindow() *MainWindow {
@@ -67,20 +68,20 @@ func initMainWindow() *MainWindow {
 	this.clientEdit.ConnectPressed(this.editClient)
 	this.clientCreate.ConnectPressed(this.createClient)
 
-	upperGrid.AddWidget(this.clientName, 0, 0, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.clientChoose, 0, 1, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.clientEdit, 0, 2, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.clientCreate, 0, 3, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.clientName, 0, 0, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.clientChoose, 0, 1, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.clientEdit, 0, 2, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.clientCreate, 0, 3, core.Qt__AlignLeft)
 
 	this.invoiceName = widgets.NewQLabel2("<No invoice selected>", nil, 0)
 	this.invoiceChoose = widgets.NewQPushButton2("Choose...", nil)
 	this.invoiceEdit = widgets.NewQPushButton2("Edit", nil)
 	this.invoiceCreate = widgets.NewQPushButton2("Create", nil)
 
-	upperGrid.AddWidget(this.invoiceName, 1, 0, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.invoiceChoose, 1, 1, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.invoiceEdit, 1, 2, core.Qt__AlignLeft)
-	upperGrid.AddWidget(this.invoiceCreate, 1, 3, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.invoiceName, 1, 0, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.invoiceChoose, 1, 1, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.invoiceEdit, 1, 2, core.Qt__AlignLeft)
+	upperGrid.AddWidget2(this.invoiceCreate, 1, 3, core.Qt__AlignLeft)
 
 	this.invoiceChoose.ConnectPressed(this.chooseInvoice)
 	this.invoiceEdit.ConnectPressed(this.editInvoice)
@@ -98,9 +99,9 @@ func initMainWindow() *MainWindow {
 
 	lowerGrid.SetSpacing(2)
 	lowerGrid.AddWidget3(this.useRemoteBox, 0, 0, 1, 3, core.Qt__AlignCenter)
-	lowerGrid.AddWidget(this.previewBtn, 1, 0, core.Qt__AlignCenter)
-	lowerGrid.AddWidget(this.saveTexBtn, 1, 1, core.Qt__AlignCenter)
-	lowerGrid.AddWidget(this.savePdfBtn, 1, 2, core.Qt__AlignCenter)
+	lowerGrid.AddWidget2(this.previewBtn, 1, 0, core.Qt__AlignCenter)
+	lowerGrid.AddWidget2(this.saveTexBtn, 1, 1, core.Qt__AlignCenter)
+	lowerGrid.AddWidget2(this.savePdfBtn, 1, 2, core.Qt__AlignCenter)
 
 	this.updateInvoice()
 	this.updateClient()
@@ -132,7 +133,7 @@ func (window *MainWindow) createInvoice() {
 					file = newfile
 				}
 				selectedInvoice.SetFile(file)
-				selectedInvoice.Number = selectedInvoice.Number+1
+				selectedInvoice.Number = selectedInvoice.Number + 1
 				selectedInvoice = selectedInvoice
 			} else {
 				selectedInvoice = data.Invoice{Date: time.Now().Format("2006-01-02")}
@@ -297,7 +298,7 @@ func (window *MainWindow) savePDF() {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
 
-	if len(lastOpenedPath) == 0{
+	if len(lastOpenedPath) == 0 {
 		lastOpenedPath = wd
 	}
 
@@ -329,7 +330,7 @@ func (window *MainWindow) saveTex() {
 	if err != nil {
 		widgets.NewQErrorMessage(window).ShowMessage("Can't get directory!")
 	}
-	if len(lastOpenedPath) == 0{
+	if len(lastOpenedPath) == 0 {
 		lastOpenedPath = wd
 	}
 	dialog := widgets.NewQFileDialog(window, 0)

@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 
-	"github.com/nylser/inforbi-invoice/data"
+	"github.com/inforbi/inforbi-invoice/data"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
@@ -100,7 +100,7 @@ func (window *ItemsDialog) itemChanged(new *widgets.QTableWidgetItem) {
 			col4 = window.table.Item(new.Row(), 4).Data(0).ToDouble(&ok)
 		}
 		new5 := widgets.NewQTableWidgetItem(0)
-		new5.SetData(0, core.NewQVariant12(col3*col4))
+		new5.SetData(0, core.NewQVariant10(col3*col4))
 		window.table.SetItem(new.Row(), 5, new5)
 	}
 }
@@ -157,13 +157,13 @@ func (window *ItemsDialog) fromItems() {
 				wItem = widgets.NewQTableWidgetItem2(item.Quantifier, 0)
 			case 3:
 				wItem = widgets.NewQTableWidgetItem(0)
-				wItem.SetData(0, core.NewQVariant12(item.Quantity))
+				wItem.SetData(0, core.NewQVariant10(item.Quantity))
 			case 4:
 				wItem = widgets.NewQTableWidgetItem(0)
-				wItem.SetData(0, core.NewQVariant12(item.SinglePrice))
+				wItem.SetData(0, core.NewQVariant10(item.SinglePrice))
 			case 5:
 				wItem = widgets.NewQTableWidgetItem(0)
-				wItem.SetData(0, core.NewQVariant12(item.SinglePrice*item.Quantity))
+				wItem.SetData(0, core.NewQVariant10(item.SinglePrice*item.Quantity))
 			}
 			window.table.SetItem(i, j, wItem)
 		}

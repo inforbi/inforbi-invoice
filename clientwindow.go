@@ -4,7 +4,7 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
-	"github.com/nylser/inforbi-invoice/data"
+	"github.com/inforbi/inforbi-invoice/data"
 )
 
 type ClientEdit struct {
